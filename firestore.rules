@@ -1,0 +1,63 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function teacher() {
+      return request.auth != null
+        && request.auth.uid == 'FsUIdhQwUthAPjycRbFB4aZ5SSB3'
+        && request.auth.token.firebase.sign_in_provider == 'google.com';
+    }
+    function anonymous() {
+      return request.auth != null
+        && request.auth.token.firebase.sign_in_provider == 'anonymous';
+    }
+    function openSession(sessionId) {
+      return exists(/databases/$(database)/documents/sessions/$(sessionId))
+        && get(/databases/$(database)/documents/sessions/$(sessionId)).data.status == 'open'
+        && get(/databases/$(database)/documents/sessions/$(sessionId)).data.expiresAt > request.time.toMillis();
+    }
+    match /sessions/{sessionId} {
+      allow create: if teacher()
+        && request.resource.data.teacherUid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['title','teacherUid','code','cardSize','freeCell','answers','drawn','status','createdAt','expiresAt'])
+        && request.resource.data.status == 'open'
+        && request.resource.data.code is string
+        && request.resource.data.code.matches('^[0-9]{6}$')
+        && request.resource.data.cardSize in [3,4,5]
+        && request.resource.data.answers is list
+        && request.resource.data.answers.size() >= 8
+        && request.resource.data.answers.size() <= 250
+        && request.resource.data.drawn == []
+        && request.resource.data.expiresAt is int
+        && request.resource.data.expiresAt > request.time.toMillis()
+        && request.resource.data.expiresAt <= request.time.toMillis()+7200000;
+      allow get: if teacher() || (anonymous() && resource.data.status == 'open' && resource.data.expiresAt > request.time.toMillis());
+      allow list: if teacher();
+      allow update, delete: if teacher() && resource.data.teacherUid == request.auth.uid;
+      match /players/{playerId} {
+        allow get: if teacher() || (anonymous() && request.auth.uid == playerId && openSession(sessionId));
+        allow list: if teacher();
+        allow create: if anonymous() && request.auth.uid == playerId && openSession(sessionId)
+          && request.resource.data.keys().hasOnly(['uid','nickname','values','marked','bingo','createdAt'])
+          && request.resource.data.uid == playerId
+          && request.resource.data.nickname is string
+          && request.resource.data.nickname.size() <= 24
+          && request.resource.data.values is list
+          && request.resource.data.values.size() == get(/databases/$(database)/documents/sessions/$(sessionId)).data.cardSize * get(/databases/$(database)/documents/sessions/$(sessionId)).data.cardSize
+          && request.resource.data.values.hasOnly(get(/databases/$(database)/documents/sessions/$(sessionId)).data.answers.concat(['★ LIBRE ★']))
+          && request.resource.data.marked is list
+          && request.resource.data.bingo == false;
+        allow update: if teacher() || (
+          anonymous() && request.auth.uid == playerId && openSession(sessionId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['marked','bingo'])
+          && request.resource.data.marked is list
+          && request.resource.data.marked.size() <= resource.data.values.size()
+          && request.resource.data.bingo is bool
+        );
+        allow delete: if teacher();
+      }
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
