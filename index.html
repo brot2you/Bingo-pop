@@ -355,7 +355,7 @@ window.startOnlineBingo=async()=>{
  const btn=document.createElement('button');btn.textContent='Copier le lien élève';btn.onclick=()=>navigator.clipboard.writeText(input.value);el.append(btn);
  onlineUnsubs.push(onSnapshot(collection(getFirestore(app),'sessions',id,'players'),snap=>{
  const box=document.getElementById('onlinePlayers');box.replaceChildren();const h=document.createElement('h3');h.textContent='Élèves connectés : '+snap.size;box.append(h);
- snap.forEach(d=>{const row=document.createElement('p');row.textContent=(d.data().nickname||'Joueur')+' · '+(d.data().bingo?'BINGO déclaré':'en jeu');box.append(row)});
+ snap.forEach(d=>{const row=document.createElement('p');row.textContent=(d.data().nickname||'Joueur')+' · en jeu';box.append(row)});
  }));
  }catch(e){onlineStatus('onlineTeacherInfo','Création impossible : '+onlineError(e))}
 };
@@ -413,8 +413,7 @@ window.claimOnlineBingo=async()=>{
  const valid=values.map((v,i)=>v==='★ LIBRE ★'||(marked.includes(i)&&drawn.includes(v)));
  let lines=[];for(let k=0;k<n;k++){lines.push(Array.from({length:n},(_,j)=>k*n+j));lines.push(Array.from({length:n},(_,j)=>j*n+k))}lines.push(Array.from({length:n},(_,j)=>j*n+j));lines.push(Array.from({length:n},(_,j)=>j*n+n-j-1));
  const win=lines.some(line=>line.every(i=>valid[i]));
- if(win)await updateDoc(pref,{bingo:true});
- onlineStatus('onlineStudentResult',win?'BINGO détecté sur cet appareil ! Déclaration envoyée au professeur (à confirmer).':'Pas encore de ligne gagnante vérifiée.');
+ onlineStatus('onlineStudentResult',win?'BINGO détecté sur ton carton ! Préviens ton professeur pour vérification.':'Pas encore de ligne gagnante vérifiée.');
  }catch(e){onlineStatus('onlineStudentResult','Vérification impossible : '+onlineError(e))}
 };
 const invite=new URLSearchParams(location.search);
