@@ -43,7 +43,7 @@ service cloud.firestore {
           && request.resource.data.nickname.size() <= 24
           && request.resource.data.values is list
           && request.resource.data.values.size() == get(/databases/$(database)/documents/sessions/$(sessionId)).data.cardSize * get(/databases/$(database)/documents/sessions/$(sessionId)).data.cardSize
-          && request.resource.data.values.hasOnly(get(/databases/$(database)/documents/sessions/$(sessionId)).data.answers.concat(['★ LIBRE ★']))
+          && request.resource.data.values.hasOnly(get(/databases/$(database)/documents/sessions/$(sessionId)).data.answers + ['★ LIBRE ★'])
           && request.resource.data.marked is list
           && request.resource.data.bingo == false;
         allow update: if teacher() || (
