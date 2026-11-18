@@ -44,14 +44,21 @@ service cloud.firestore {
           && request.resource.data.values is list
           && request.resource.data.values.size() == get(/databases/$(database)/documents/sessions/$(sessionId)).data.cardSize * get(/databases/$(database)/documents/sessions/$(sessionId)).data.cardSize
           && request.resource.data.values.removeAll(['★ LIBRE ★']).hasOnly(get(/databases/$(database)/documents/sessions/$(sessionId)).data.answers)
+          && request.resource.data.values.removeAll(['★ LIBRE ★']).size() == (get(/databases/$(database)/documents/sessions/$(sessionId)).data.cardSize * get(/databases/$(database)/documents/sessions/$(sessionId)).data.cardSize - (get(/databases/$(database)/documents/sessions/$(sessionId)).data.freeCell ? 1 : 0))
+          && request.resource.data.values.toSet().size() == request.resource.data.values.size()
+          && (!get(/databases/$(database)/documents/sessions/$(sessionId)).data.freeCell || (get(/databases/$(database)/documents/sessions/$(sessionId)).data.cardSize == 5 && request.resource.data.values[12] == '★ LIBRE ★'))
           && request.resource.data.marked is list
+          && request.resource.data.marked.hasOnly([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24])
+          && request.resource.data.marked.toSet().size() == request.resource.data.marked.size()
           && request.resource.data.bingo == false;
         allow update: if teacher() || (
           anonymous() && request.auth.uid == playerId && openSession(sessionId)
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['marked','bingo'])
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['marked'])
           && request.resource.data.marked is list
           && request.resource.data.marked.size() <= resource.data.values.size()
-          && request.resource.data.bingo is bool
+          && request.resource.data.marked.hasOnly([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24])
+          && request.resource.data.marked.toSet().size() == request.resource.data.marked.size()
+          && request.resource.data.bingo == resource.data.bingo
         );
         allow delete: if teacher();
       }
