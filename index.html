@@ -393,7 +393,7 @@ window.joinOnlineBingo=async()=>{
 };
 function onlineRenderBoard(values,n){
  const box=document.getElementById('onlineStudentBoard');if(!box||!onlinePlayer)return;
- box.replaceChildren();const grid=document.createElement('div');grid.className='online-board';
+ box.replaceChildren();const grid=document.createElement('div');grid.className='online-board';grid.style.gridTemplateColumns='repeat('+n+',minmax(0,1fr))';
  values.forEach((v,i)=>{const b=document.createElement('button');b.textContent=v;b.className='online-cell'+(onlineMarks.includes(i)?' selected':'');b.disabled=v==='★ LIBRE ★'||window.onlineLiveData?.status!=='open';b.onclick=()=>onlineToggle(i);grid.append(b)});
  box.append(grid);
 }
@@ -414,7 +414,7 @@ window.claimOnlineBingo=async()=>{
  let lines=[];for(let k=0;k<n;k++){lines.push(Array.from({length:n},(_,j)=>k*n+j));lines.push(Array.from({length:n},(_,j)=>j*n+k))}lines.push(Array.from({length:n},(_,j)=>j*n+j));lines.push(Array.from({length:n},(_,j)=>j*n+n-j-1));
  const win=lines.some(line=>line.every(i=>valid[i]));
  if(win)await updateDoc(pref,{bingo:true});
- onlineStatus('onlineStudentResult',win?'BINGO ! Ta déclaration a été transmise au professeur.':'Pas encore de ligne gagnante vérifiée.');
+ onlineStatus('onlineStudentResult',win?'BINGO détecté sur cet appareil ! Déclaration envoyée au professeur (à confirmer).':'Pas encore de ligne gagnante vérifiée.');
  }catch(e){onlineStatus('onlineStudentResult','Vérification impossible : '+onlineError(e))}
 };
 const invite=new URLSearchParams(location.search);
